@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 
 import com.zhangxb.easyload_library.layout.AbstractLayout;
+import com.zhangxb.easyload_library.listener.OnReloadListener;
 
 import java.util.Map;
 
@@ -19,6 +20,8 @@ public class EasyBuilder {
     private AbstractLayout netErrorLayout;
     private AbstractLayout errorLayout;
     private AbstractLayout customLayout;
+
+    private OnReloadListener onReloadListener;
 
     private static class SingelT {
         static EasyBuilder INSTANCE = new EasyBuilder();
@@ -37,6 +40,7 @@ public class EasyBuilder {
     public EasyBuilder addEmptyLayout(AbstractLayout abstractLayout) {
         addOperation(abstractLayout);
         emptyLayout = abstractLayout;
+        emptyLayout.addView(LayoutInflater.from(abstractLayout.getContext()).inflate(abstractLayout.setLayout(), null, false));
         return this;
     }
 
@@ -49,6 +53,7 @@ public class EasyBuilder {
     public EasyBuilder addLoadingLayout(AbstractLayout abstractLayout) {
         addOperation(abstractLayout);
         loadingLayout = abstractLayout;
+        loadingLayout.addView(LayoutInflater.from(abstractLayout.getContext()).inflate(abstractLayout.setLayout(), null, false));
         return this;
     }
 
@@ -61,6 +66,7 @@ public class EasyBuilder {
     public EasyBuilder addNetErrorLayout(AbstractLayout abstractLayout) {
         addOperation(abstractLayout);
         netErrorLayout = abstractLayout;
+        netErrorLayout.addView(LayoutInflater.from(abstractLayout.getContext()).inflate(abstractLayout.setLayout(), null, false));
         return this;
     }
 
@@ -73,6 +79,7 @@ public class EasyBuilder {
     public EasyBuilder addErrorLayout(AbstractLayout abstractLayout) {
         addOperation(abstractLayout);
         errorLayout = abstractLayout;
+        errorLayout.addView(LayoutInflater.from(abstractLayout.getContext()).inflate(abstractLayout.setLayout(), null, false));
         return this;
     }
 
@@ -85,19 +92,29 @@ public class EasyBuilder {
     public EasyBuilder addCustomLayout(AbstractLayout abstractLayout) {
         addOperation(abstractLayout);
         customLayout = abstractLayout;
+        customLayout.addView(LayoutInflater.from(abstractLayout.getContext()).inflate(abstractLayout.setLayout(), null, false));
         return this;
     }
 
     private void addOperation(AbstractLayout abstractLayout) {
-        //获取布局
-        int viewId = abstractLayout.setLayout();
-        View view = LayoutInflater.from(context).inflate(viewId, null);
-        //获取布局上的操作，并设置对应动作
-        Map<Integer, View.OnClickListener> opera = abstractLayout.getOperations();
-        for (Map.Entry<Integer, View.OnClickListener> entry : opera.entrySet()) {
-            view.findViewById(entry.getKey()).setOnClickListener(entry.getValue());
-        }
+       abstractLayout.setOnClickListener(new View.OnClickListener() {
+           @Override
+           public void onClick(View v) {
+               onReloadListener.onReload(v);
+           }
+       });
     }
+
+    /**
+     * 添加重试回调
+     * @param onReloadListener
+     * @return
+     */
+    public EasyBuilder addOnReloadListener(OnReloadListener onReloadListener){
+        this.onReloadListener = onReloadListener;
+        return this;
+    }
+
 
     public EasyLoad build() {
         return new EasyLoad();
@@ -109,4 +126,23 @@ public class EasyBuilder {
     }
 
 
+    public AbstractLayout getEmptyLayout() {
+        return emptyLayout;
+    }
+
+    public AbstractLayout getLoadingLayout() {
+        return loadingLayout;
+    }
+
+    public AbstractLayout getNetErrorLayout() {
+        return netErrorLayout;
+    }
+
+    public AbstractLayout getErrorLayout() {
+        return errorLayout;
+    }
+
+    public AbstractLayout getCustomLayout() {
+        return customLayout;
+    }
 }
